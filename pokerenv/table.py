@@ -205,29 +205,41 @@ class Table(gym.Env):
     def _street_transition(self, transition_to_end=False):
         transitioned = False
         if self.street == GameState.PREFLOP:
-            self.cards = self.deck.draw(3)
+            # 플랍: draw(3) → 세 장 리스트가 반환되므로 extend로 합쳐줌
+            self.cards = []
+            self.cards.extend(self.deck.draw(3))
             self._write_event("*** FLOP *** [%s %s %s]" %
-                              (Card.int_to_str(self.cards[0]), Card.int_to_str(self.cards[1]),
-                               Card.int_to_str(self.cards[2])))
+                            (Card.int_to_str(self.cards[0]), 
+                            Card.int_to_str(self.cards[1]),
+                            Card.int_to_str(self.cards[2])))
             self.street = GameState.FLOP
             transitioned = True
+
         if self.street == GameState.FLOP and (not transitioned or transition_to_end):
+            # 턴: draw(1) → [단일int] 형태이므로 extend(new) 혹은 append(new[0])
             new = self.deck.draw(1)
-            self.cards.append(new)
+            self.cards.extend(new)  # 여기서 append → extend로 변경
             self._write_event("*** TURN *** [%s %s %s] [%s]" %
-                              (Card.int_to_str(self.cards[0]), Card.int_to_str(self.cards[1]),
-                               Card.int_to_str(self.cards[2]), Card.int_to_str(self.cards[3])))
+                            (Card.int_to_str(self.cards[0]),
+                            Card.int_to_str(self.cards[1]),
+                            Card.int_to_str(self.cards[2]),
+                            Card.int_to_str(self.cards[3])))
             self.street = GameState.TURN
             transitioned = True
+
         if self.street == GameState.TURN and (not transitioned or transition_to_end):
+            # 리버: draw(1) → [단일int] 형태이므로 extend(new)
             new = self.deck.draw(1)
-            self.cards.append(new)
+            self.cards.extend(new)  # 여기서도 append → extend
             self._write_event("*** RIVER *** [%s %s %s %s] [%s]" %
-                              (Card.int_to_str(self.cards[0]), Card.int_to_str(self.cards[1]),
-                               Card.int_to_str(self.cards[2]), Card.int_to_str(self.cards[3]),
-                               Card.int_to_str(self.cards[4])))
+                            (Card.int_to_str(self.cards[0]),
+                            Card.int_to_str(self.cards[1]),
+                            Card.int_to_str(self.cards[2]),
+                            Card.int_to_str(self.cards[3]),
+                            Card.int_to_str(self.cards[4])))
             self.street = GameState.RIVER
             transitioned = True
+
         if self.street == GameState.RIVER and (not transitioned or transition_to_end):
             if not self.hand_is_over:
                 if self.hand_history_enabled:
